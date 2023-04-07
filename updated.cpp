@@ -3,6 +3,8 @@
 #include <unordered_map>
 #include <chrono>
 #include <thread>
+#include <vector>
+#include <iomanip>
 
 // Define a struct to represent a stock or Bitcoin
 struct Asset
@@ -91,12 +93,53 @@ public:
     {
         return balance_;
     }
+
+    
+    // Method to display a summary of the user's portfolio
+    void displaySummary(const std::vector<Asset> &assets)
+    {
+        std::cout << "Portfolio Summary:\n\n";
+        std::cout << "Symbol\tShares\tMarket Value\n";
+        std::cout << "------\t------\t------------\n";
+
+        double total_value = balance_;
+
+        for (const Asset &asset : assets)
+        {
+            auto search = assets_.find(asset.symbol);
+            if (search != assets_.end())
+            {
+                double market_value = search->second * asset.price;
+                total_value += market_value;
+                std::cout << asset.symbol << "\t" << search->second << "\t$" << std::fixed << std::setprecision(2) << market_value << std::endl;
+            }
+        }
+
+        std::cout << "\nCash Balance: $" << std::fixed << std::setprecision(2) << balance_ << std::endl;
+        std::cout << "Total Portfolio Value: $" << std::fixed << std::setprecision(2) << total_value << std::endl;
+    }
+    
 };
+// Function to update asset prices
+void updateAssetPrices(std::vector<Asset> &assets)
+{
+    // Simulate price changes by updating the prices with a random percentage change
+    for (Asset &asset : assets)
+    {
+        double change = ((std::rand() % 1001) - 500) / 10000.0; // Random price change between -5% and 5%
+        asset.price *= (1 + change);
+    }
+}
+
 
 int main()
 {
-    // Define an Asset object for IBM with a price of $100.00
+// Define Asset objects
     Asset ibm = {"IBM", 100.00};
+    Asset btc = {"BTC", 30000.00};
+
+    // Define a vector to store the assets
+    std::vector<Asset> assets = {ibm, btc};
 
     // Define a Portfolio object with a cash balance of $1000.00
     Portfolio portfolio(1000.00);
@@ -104,14 +147,20 @@ int main()
     // Buy 10 shares of IBM
     portfolio.addAsset(ibm, 10);
 
-    // Print the current market value of the IBM shares in the portfolio
-    std::cout << "Market value of IBM shares in portfolio: $" << portfolio.getAssetMarketValue(ibm) << std::endl;
+    // Buy 0.01 shares of Bitcoin
+    portfolio.addAsset(btc, 0.01);
 
-    // Sell 5 shares of IBM
-    portfolio.sellAsset(ibm, 5);
+    // Display the portfolio summary
+    portfolio.displaySummary(assets);
 
-    // Print the current market value of the IBM shares in the portfolio
-    std::cout << "Market value of IBM shares in portfolio: $" << portfolio.getAssetMarketValue(ibm) << std::endl;
+    // Wait for 5 seconds
+    std::this_thread::sleep_for(std::chrono::seconds(5));
+
+    // Update asset prices
+    updateAssetPrices(assets);
+
+    // Display the updated portfolio summary
+    portfolio.displaySummary(assets);
 
     return 0;
 }
